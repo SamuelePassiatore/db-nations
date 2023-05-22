@@ -15,13 +15,13 @@ public class Main {
 			
 				try(Connection con = DriverManager.getConnection(url, user, password)) {
 			    
-					String sql = "SELECT countries.name, countries.country_id, regions.name continents.name"
-						+ "FROM countries"
-						+ "JOIN regions"
-						+ "ON countries.region_id = regions.region_id"
-					    + "JOIN continents"
-						+ "ON regions.continent_id = continents.continent_id"
-						+ "ORDER BY countries.name";
+					String sql = "SELECT countries.name, countries.country_id, regions.name, continents.name "
+						+ "FROM countries "
+						+ "JOIN regions "
+						+ "ON countries.region_id = regions.region_id "
+					    + "JOIN continents "
+						+ "ON regions.continent_id = continents.continent_id "
+						+ "ORDER BY countries.name ";
 				
 				
 					try (PreparedStatement ps = con.prepareStatement(sql)) {
@@ -41,15 +41,15 @@ public class Main {
 										+ regionName + " - " + continentName);
 							}
 					   } catch (SQLException ex) {
-						System.err.println("Error");
+						System.err.println(ex);
 					   }
 						
 					} catch (SQLException ex) {
-						System.err.println("Query Error");
+						System.err.println(ex);
 					}
 
 			} catch (SQLException ex){
-				System.err.println("Connection error");
+				System.err.println(ex);
 			}
 	}
 }
