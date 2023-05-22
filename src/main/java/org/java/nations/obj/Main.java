@@ -5,6 +5,8 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 public class Main {
@@ -13,6 +15,8 @@ public class Main {
 			String url = "jdbc:mysql://localhost:3306/nations";
 			String user = "root";
 			String password = "root";
+			
+			List<Integer> idList = new ArrayList<>();
 			
 				try(Connection con = DriverManager.getConnection(url, user, password)) {
 					
@@ -48,6 +52,7 @@ public class Main {
 								System.out.println(countryName + " - " + countryId + " - " 
 										+ regionName + " - " + continentName);
 								
+								idList.add(countryId);
 								hasResults = true;
 							
 							}
@@ -58,9 +63,47 @@ public class Main {
 						System.err.println("Error");
 					   }
 						
+					   System.out.println("Inserisci l'ID di una nazione: ");
+			           int selectedCountryId = scanner.nextInt();
+			           scanner.nextLine(); 
+			           
+			           if (idList.contains(selectedCountryId)) {
+			        	   List<String> languagesList = new ArrayList<>();
+			        	   String languages = "SELECT languages.language "
+									+ "FROM countries "
+									+ "JOIN country_languages "
+									+ "ON countries.country_id = country_languages.country_id "
+									+ "JOIN languages\r\n"
+									+ "ON country_languages.language_id = languages.language_id "
+									+ "WHERE countries.country_id = ?";
+
+							try(PreparedStatement ps2 = con.prepareStatement(languages)){
+
+								ps2.setInt(1, selectedCountryId);
+
+								try(ResultSet rs2 = ps2.executeQuery()){
+
+									while(rs2.next()) {
+										final String language = rs2.getString(1);
+										languagesList.add(language);
+									}
+								}
+							} catch(SQLException ex) {
+								System.out.println("Query Error");
+							}
+							
+							 System.out.println("Lingue parlate: ");
+							 for (String language : languagesList) {
+							 System.out.println(language);
+						    }
+						} else {
+							System.out.println("Id not included ");
+						}
+
 					} catch (SQLException ex) {
 						System.err.println("Query Error");
 					}
+					
 
 			} catch (SQLException ex){
 				System.err.println("Connection error");
