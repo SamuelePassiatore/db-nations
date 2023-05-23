@@ -16,7 +16,7 @@ public class Main {
 			String user = "root";
 			String password = "root";
 			
-			List<Integer> idList = new ArrayList<>();
+
 			
 				try(Connection con = DriverManager.getConnection(url, user, password)) {
 					
@@ -51,58 +51,72 @@ public class Main {
 								
 								System.out.println(countryName + " - " + countryId + " - " 
 										+ regionName + " - " + continentName);
-								
-								idList.add(countryId);
+
 								hasResults = true;
 							
 							}
 							if (!hasResults) {
 		                        System.out.println("Nessuna nazione trovata corrispondente alla ricerca.");
 		                   }
-					   } catch (SQLException ex) {
+					    } catch (SQLException ex) {
 						System.err.println("Error");
-					   }
-						
-					   System.out.println("Inserisci l'ID di una nazione: ");
-			           int selectedCountryId = scanner.nextInt();
-			           scanner.nextLine(); 
-			           
-			           if (idList.contains(selectedCountryId)) {
-			        	   List<String> languagesList = new ArrayList<>();
-			        	   String languages = "SELECT languages.language "
-									+ "FROM countries "
-									+ "JOIN country_languages "
-									+ "ON countries.country_id = country_languages.country_id "
-									+ "JOIN languages\r\n"
-									+ "ON country_languages.language_id = languages.language_id "
-									+ "WHERE countries.country_id = ?";
-
-							try(PreparedStatement ps2 = con.prepareStatement(languages)){
-
-								ps2.setInt(1, selectedCountryId);
-
-								try(ResultSet rs2 = ps2.executeQuery()){
-
-									while(rs2.next()) {
-										final String language = rs2.getString(1);
-										languagesList.add(language);
-									}
-								}
-							} catch(SQLException ex) {
-								System.out.println("Query Error");
-							}
-							
-							 System.out.println("Lingue parlate: ");
-							 for (String language : languagesList) {
-							 System.out.println(language);
-						    }
-						} else {
-							System.out.println("Id not included ");
-						}
-
-					} catch (SQLException ex) {
-						System.err.println("Query Error");
+					   } 
+					catch(Exception ex) { 
+						System.err.println(ex);
 					}
+				}
+					
+					
+						System.out.print("Id nazione: ");
+						final String strIdNation = scanner.nextLine();
+						final int idNation = Integer.valueOf(strIdNation);
+						
+						System.out.println("");
+						
+						String subSql1 = " SELECT l.`language` "
+										+ " FROM country_languages cl "
+										+ "	JOIN languages l "
+										+ "		ON cl.language_id = l.language_id "
+										+ " WHERE cl.country_id = ?; ";
+						String subSql2 = " SELECT c.name, cs.* "
+										+ " FROM countries c "
+										+ "	JOIN country_stats cs "
+										+ "		ON c.country_id = cs.country_id "
+										+ " WHERE cs.country_id = ? "
+										+ " ORDER BY cs.`year` DESC "
+										+ " LIMIT 1; ";
+						
+						try (PreparedStatement ps1 = con.prepareStatement(subSql1);
+								PreparedStatement ps2 = con.prepareStatement(subSql2);) {
+							
+							ps1.setInt(1, idNation);
+							ps2.setInt(1, idNation);
+							
+							try (ResultSet rs1 = ps1.executeQuery();
+									ResultSet rs2 = ps2.executeQuery()) {
+								if (!rs2.next()) return;
+								
+								String nationName = rs2.getString(1);
+								
+								System.out.println("Details for country: " + nationName);
+								System.out.print("Languages: ");
+								
+								while(rs1.next()) {
+									
+									System.out.print(rs1.getString(1) 
+											+ (rs1.isLast() ? "" : ", "));
+								}
+								
+								System.out.println("\nMost recent stats");
+								System.out.println("Year: " + rs2.getInt(3));
+								System.out.println("Population: " + rs2.getInt(4));
+								System.out.println("GDP: " + rs2.getLong(5));
+							} catch(Exception ex) { 
+								System.err.println(ex);
+							}
+						} catch(Exception ex) { 
+							System.err.println(ex);
+						}
 					
 
 			} catch (SQLException ex){
